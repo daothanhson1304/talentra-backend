@@ -60,7 +60,9 @@ exports.createTask = async (req, res) => {
     const task = await Task.create(req.body);
     console.log('Created task:', task);
 
-    res.status(201).json(task);
+    // Remove createdAt, updatedAt, and __v from response
+    const { createdAt, updatedAt, __v, ...taskResponse } = task.toObject();
+    res.status(201).json(taskResponse);
   } catch (error) {
     console.error('Error creating task:', error);
 
@@ -78,7 +80,7 @@ exports.createTask = async (req, res) => {
 
 exports.getAllTasks = async (req, res) => {
   try {
-    const tasks = await Task.find();
+    const tasks = await Task.find().select('-createdAt -updatedAt -__v');
     res.status(200).json(tasks);
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -87,7 +89,9 @@ exports.getAllTasks = async (req, res) => {
 
 exports.getTaskById = async (req, res) => {
   try {
-    const task = await Task.findById(req.params.id);
+    const task = await Task.findById(req.params.id).select(
+      '-createdAt -updatedAt -__v'
+    );
     res.status(200).json(task);
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -96,18 +100,20 @@ exports.getTaskById = async (req, res) => {
 
 exports.getTaskByEmployeeId = async (req, res) => {
   try {
-    const tasks = await Task.find({ employeeId: req.params.id });
+    const tasks = await Task.find({ employeeId: req.params.id }).select(
+      '-createdAt -updatedAt -__v'
+    );
     res.status(200).json(tasks);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
 };
 
-exports.updateTask = async (req, res) => {
+exports.updateTaskById = async (req, res) => {
   try {
     const task = await Task.findByIdAndUpdate(req.params.id, req.body, {
       new: true,
-    });
+    }).select('-createdAt -updatedAt -__v');
     res.status(200).json(task);
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -129,5 +135,29 @@ exports.deleteAllTasks = async (req, res) => {
     res.status(200).json({ message: 'All tasks deleted' });
   } catch (error) {
     res.status(500).json({ message: error.message });
+  }
+};
+
+exports.updateTasks = async (req, res) => {
+  try {
+    const tasks = req.body;
+
+    if (!Array.isArray(tasks)) {
+      return res.status(400).json({ message: 'Expected an array of tasks' });
+    }
+
+    const updatePromises = tasks.map(task => {
+      const { _id, ...updates } = task;
+      return Task.findByIdAndUpdate(_id, updates, { new: true }).select(
+        '-createdAt -updatedAt -__v'
+      );
+    });
+
+    const updatedTasks = await Promise.all(updatePromises);
+
+    res.status(200).json(updatedTasks);
+  } catch (error) {
+    console.error('Error updating tasks:', error);
+    res.status(500).json({ message: 'Server error', error: error.message });
   }
 };

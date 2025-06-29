@@ -37,7 +37,9 @@ exports.createEmployee = async (req, res) => {
     const saved = await newEmp.save();
     console.log('Saved employee:', saved);
 
-    res.status(201).json(saved);
+    // Remove createdAt, updatedAt, and __v from response
+    const { createdAt, updatedAt, __v, ...employeeResponse } = saved.toObject();
+    res.status(201).json(employeeResponse);
   } catch (err) {
     console.error('Error creating employee:', err);
 
@@ -62,7 +64,9 @@ exports.createEmployee = async (req, res) => {
 
 exports.getAllEmployees = async (req, res) => {
   try {
-    const employees = await Employee.find();
+    const employees = await Employee.find().select(
+      '-createdAt -updatedAt -__v'
+    );
     res.status(200).json(employees);
   } catch (err) {
     res.status(500).json({ error: err.message });
