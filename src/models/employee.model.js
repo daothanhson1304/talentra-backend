@@ -7,9 +7,12 @@ const employeeSchema = new mongoose.Schema({
   salary: { type: Number, required: true },
   department: { type: String, required: true },
   position: { type: String, required: true },
+  dateOfBirth: { type: Date, required: true },
+  address: { type: String, required: true },
+  city: { type: String, required: true },
+  country: { type: String, required: true },
   createdAt: { type: Date, default: Date.now },
   updatedAt: { type: Date, default: Date.now },
-  role: { type: String, default: 'employee' },
   avatar: { type: String, default: '' },
 });
 
