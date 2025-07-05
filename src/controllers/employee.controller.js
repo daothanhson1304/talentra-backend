@@ -399,9 +399,7 @@ exports.getEmployeeById = async (req, res) => {
     }
 
     // Find employee by ID
-    const employee = await Employee.findById(id).select(
-      '-createdAt -updatedAt -__v'
-    );
+    const employee = await Employee.findById(id).select('-updatedAt -__v');
 
     if (!employee) {
       return res.status(404).json({
